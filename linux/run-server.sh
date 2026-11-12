@@ -11,7 +11,7 @@ IP=${IP:-}                      # the public address on a multi-homed host (-mul
 PORT=${PORT:-7810}              # game port; queries on PORT+1, old GameSpy queries on PORT+10
 MAP=${MAP:-SU-Abydos}           # first map; then the rotation of [SpecialUnit.SUMapListMission]
 BOTS=${BOTS:-8}                 # players + bots kept in the game: bots leave as players join
-DIFFICULTY=${DIFFICULTY:-3}     # bot skill 0-7; at the engine default of 1, bots hardly shoot back
+DIFFICULTY=${DIFFICULTY:-4}     # bot skill 0-7; at 4 bots lead their shots; at the engine default of 1 they hardly shoot back
 # SUBotFix: the bots (server-side only). SUTweaks.MutSUSpeed: movement x1.4 (needs ServerPackages=SUTweaks).
 MUTATORS=${MUTATORS:-SUBotFix.MutSUBotFix,SUTweaks.MutSUSpeed}
 # ------------------------------------------------------------------------------------------------------------

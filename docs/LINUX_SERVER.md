@@ -17,7 +17,7 @@ UT2004 has no Linux depot on Steam, but its content is the same on every platfor
 Download the mod's official **`SpecialUnit.zip`** from its [ModDB page](https://www.moddb.com/mods/special-unit/downloads) (SHA-256 `a82b3202…6293`; ModDB doesn't let scripts download it, so copy it to the server yourself), and extract the release zip, then:
 
 ```bash
-bash linux/install-server.sh /home/steam/ut2004 ~/SpecialUnit.zip ~/specialunit-redial-v1.0.0
+bash linux/install-server.sh /home/steam/ut2004 ~/SpecialUnit.zip ~/specialunit-redial-v1.0.1
 ```
 
 It checks the zip, extracts the mod into `<UT2004>/SpecialUnit`, copies `SUBotFix` and `SUTweaks`, lets the engine build `SpecialUnit/System/SpecialUnit.ini` (from `System/UT2004.ini` and the mod's `default.ini`), then applies `linux/server-settings.ini` to it with `linux/su-ini.py`:
@@ -25,7 +25,7 @@ It checks the zip, extracts the mod into `<UT2004>/SpecialUnit`, copies `SUBotFi
 - port 7810, the master server uplink under the name the 3374 patch gave it (`IpDrv.MasterServerLauncher`: with the old name there's no query port and no listing), `DoUplink=True`;
 - `ServerPackages=SUTweaks` (players download it), and never `SUBotFix` (server-side only);
 - no web admin and no map vote (a UT2004 server on the same install has its own, on the same ports and with its own game types);
-- the server name, 16 players, bot skill 3, the map rotation and the movement speed.
+- the server name, 16 players, bot skill 4, the map rotation and the movement speed.
 
 To change any of them, copy `server-settings.ini`, edit the copy and pass it after the zip folder: it's applied last (`Key=` sets a key, `+Key=` adds a line, `-Key=` removes one). `SpecialUnit.ini` starts as a copy of `System/UT2004.ini`: if that server has its own `ServerPackages`, take them out the same way (`-ServerPackages=MyMutator`), or players would download them too. The script lists them at the end. It backs up `SpecialUnit.ini` before each run, and running it again is safe.
 
@@ -51,5 +51,6 @@ In `[SUBotFix.MutSUBotFix]` of `SpecialUnit.ini` (the defaults are those of the 
 | `bAutoBalance` | `True` | the side that wins a map more often gets weaker bots |
 | `bBalanceLearn` | `True` | the map's score moves after each round (saved in `SUBotFixBalance.ini`) |
 | `BalanceScores` | built in | starting scores, e.g. `BalanceScores=SU-Chulak=-1` (negative: the Tau'ri have been winning) |
+| `HumanMaxBias` | `1.0` | while a human plays (not in co-op), the skill gap between the sides stays within this many levels each way |
 | `bMapRoundTime` | `True` | each round lasts its map's time, not `TimeLimit` |
 | `bLogFixes` | `True` | what the bots' fixes do, in the server log |

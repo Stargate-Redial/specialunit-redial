@@ -30,7 +30,7 @@ An unofficial add-on for **Special Unit** (2013), the Stargate SG-1 total conver
 ### Quick start
 
 1. Get **Unreal Tournament 2004**. It is no longer sold on Steam, but [OldUnreal](https://www.oldunreal.com/downloads/ut2004/full-game-installers/), who maintain the game's community patches, offer a free installer for the full game: download **`UT2004.exe`** (Windows 7 or later) and run it. It installs the game in the folder you choose, already patched. A Steam or retail copy works too.
-2. Download **`specialunit-redial-v1.0.0.zip`** from [Releases](../../releases), extract it anywhere and double-click **`install.bat`**.
+2. Download **`specialunit-redial-v1.0.1.zip`** from [Releases](../../releases), extract it anywhere and double-click **`install.bat`**.
 3. The installer finds UT2004, offers the OldUnreal 3374 patch if it's missing, then opens the [ModDB page](https://www.moddb.com/mods/special-unit/downloads) of Special Unit: download **`SpecialUnit.zip`** (250 MB). The installer picks it up in your Downloads folder by itself.
 4. Launch **Stargate - Special Unit** from the Desktop. Then either:
    - **Instant Action** on an `SU-` map, with as many bots as you like ("SU Bot Fix" and "SU Speed" are already ticked in Mutators);
@@ -58,13 +58,13 @@ Special Unit came with bots, but they stood at their spawn on most maps. Redial 
 - **Navigation:** the maps were built for smaller characters than the mod's soldiers, so bots couldn't use most paths. Paths are resized, broken networks joined, and corridors laid by the bots' own flood fill where a map has no path at all (TokRa's crystal tunnels, IceDet's caves and plank bridge).
 - **Objectives:** bots go for the objectives the mod never pointed them to, use the rings, fetch and carry the crystals, step on the triggers that bring the bridges, and defend what their team holds.
 - **Fights:** bots fire while they move, medics heal with their syringe, soldiers refill at the ammo crates, Goa'uld bots get a staff weapon (the zat can't hurt an objective), and gunners stop firing into their own ship.
-- **Balance:** each map keeps a score of its last rounds, and the side that wins more gets weaker bots, round after round.
+- **Balance:** each map keeps a score of its last rounds, and the side that wins more gets weaker bots, round after round. While you play, the gap between the two sides stays within one skill level, so neither your teammates nor your enemies are useless.
 - **Things a player should not see:** a bot is never moved under a player's eyes.
 
 | Console command / setting | Effect |
 |---|---|
 | Instant Action > Bots | number of bots |
-| Instant Action > Bot Skill, or `GameDifficulty` in `SpecialUnit.ini` | bot skill (0 to 7); servers use 3 |
+| Instant Action > Bot Skill, or `GameDifficulty` in `SpecialUnit.ini` | bot skill (0 to 7); the 24/7 server uses 4 |
 | `[SUBotFix.MutSUBotFix] bAutoBalance=False` | turns the skill balance off |
 | `[SUTweaks.MutSUSpeed] SpeedScale=1.4` | movement speed (1.0 = the mod's own) |
 
@@ -106,7 +106,7 @@ Un ajout non officiel pour **Special Unit** (2013), la conversion totale Stargat
 ### Démarrage rapide
 
 1. Procurez-vous **Unreal Tournament 2004**. Il n'est plus vendu sur Steam, mais [OldUnreal](https://www.oldunreal.com/downloads/ut2004/full-game-installers/), qui maintient les patchs communautaires du jeu, propose un installeur gratuit du jeu complet : téléchargez **`UT2004.exe`** (Windows 7 ou plus récent) et lancez-le. Il installe le jeu dans le dossier de votre choix, déjà patché. Une copie Steam ou en boîte fonctionne aussi.
-2. Téléchargez **`specialunit-redial-v1.0.0.zip`** dans les [Releases](../../releases), extrayez-le n'importe où, puis double-cliquez sur **`install.bat`**.
+2. Téléchargez **`specialunit-redial-v1.0.1.zip`** dans les [Releases](../../releases), extrayez-le n'importe où, puis double-cliquez sur **`install.bat`**.
 3. L'installeur trouve UT2004, propose le patch OldUnreal 3374 s'il manque, puis ouvre la [page ModDB](https://www.moddb.com/mods/special-unit/downloads) de Special Unit : téléchargez **`SpecialUnit.zip`** (250 Mo). L'installeur le trouve tout seul dans votre dossier Téléchargements.
 4. Lancez **Stargate - Special Unit** depuis le Bureau. Ensuite :
    - **Partie instantanée** sur une carte `SU-`, avec autant de bots que vous voulez (« SU Bot Fix » et « SU Speed » sont déjà cochés dans Mutators) ;
@@ -134,13 +134,13 @@ Special Unit avait des bots, mais ils restaient à leur point d'apparition sur l
 - **Navigation :** les cartes ont été construites pour des personnages plus petits que les soldats du mod, et les bots ne pouvaient pas emprunter la plupart des chemins. Les chemins sont redimensionnés, les réseaux coupés sont reliés, et des couloirs sont tracés par remplissage là où une carte n'a aucun chemin (les tunnels à cristaux de TokRa, les grottes et le pont de planches d'IceDet).
 - **Objectifs :** les bots vont vers les objectifs que le mod ne leur indiquait pas, prennent les anneaux, vont chercher et portent les cristaux, marchent sur les déclencheurs qui font venir les ponts, et défendent ce que leur équipe tient.
 - **Combats :** les bots tirent en se déplaçant, les médecins soignent avec leur seringue, les soldats se ravitaillent aux caisses de munitions, les bots goa'uld reçoivent une lance (le zat ne peut pas abîmer un objectif), et les artilleurs ne tirent plus dans leur propre vaisseau.
-- **Équilibre :** chaque carte garde un score de ses dernières manches, et le camp qui gagne le plus reçoit des bots plus faibles, manche après manche.
+- **Équilibre :** chaque carte garde un score de ses dernières manches, et le camp qui gagne le plus reçoit des bots plus faibles, manche après manche. Quand vous jouez, l'écart entre les deux camps reste dans un niveau, pour que ni vos coéquipiers ni vos adversaires ne soient inutiles.
 - **Ce qu'un joueur ne doit pas voir :** un bot n'est jamais déplacé sous les yeux d'un joueur.
 
 | Commande console / réglage | Effet |
 |---|---|
 | Partie instantanée > Bots | nombre de bots |
-| Partie instantanée > niveau des bots, ou `GameDifficulty` dans `SpecialUnit.ini` | niveau des bots (0 à 7) ; les serveurs utilisent 3 |
+| Partie instantanée > niveau des bots, ou `GameDifficulty` dans `SpecialUnit.ini` | niveau des bots (0 à 7) ; le serveur 24/7 utilise 4 |
 | `[SUBotFix.MutSUBotFix] bAutoBalance=False` | désactive l'équilibrage des niveaux |
 | `[SUTweaks.MutSUSpeed] SpeedScale=1.4` | vitesse de déplacement (1.0 = celle du mod) |
 

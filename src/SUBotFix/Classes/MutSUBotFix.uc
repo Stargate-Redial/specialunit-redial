@@ -85,6 +85,10 @@ var array<Bot> NoAnchorBots;           // fix 64: bots with no anchor, and since
 var array<float> NoAnchorSince;
 var int NumAnchorWalks, NumAnchorPuts, NumAnchorRespawns;
 var int NumFactoryHolds;               // fix 65: vehicle spawns held while someone stood on the spot
+var() config float HumanMaxBias;       // fix 69: with a human playing, the skill gap of fix 36 is held to this much each way (co-op excepted)
+var bool bHumansIn;                    // fix 69: a human plays (checked by BalanceSkills)
+var int NumExitAlternates;             // fix 69: hops put next to a taken exit
+var() config bool bTestHuman;          // tests only: act as if a human played and saw everything (fixes 54 and 69)
 var() config bool bKeepSoleLinks;      // fix 56: a stuck link that is a bot's only way is not closed
 var int NumLinkPuts;
 var() config float TrappedTime;        // fix 57: a bot with no walk to its team's objectives respawns after this (0: off)
@@ -1490,6 +1494,16 @@ function NavigationPoint ExitNode(Vehicle V)
 // foot whose nearest node has no walk to any objective its team goes for (FrontDist), that has no
 // route to its squad objective either, with no enemy in sight, for TrappedTime, does the same, as
 // long as its team's active spawns do lead to the front. Not in co-op, where lives are counted.
+function bool HopPending(Pawn P)
+{
+    local int j;
+
+    for (j = 0; j < Escapes.Length; j++)
+        if (Escapes[j].P == P && P != None)
+            return true;
+    return false;
+}
+
 function RespawnTrapped()
 {
     local Controller C;
@@ -1529,7 +1543,9 @@ function RespawnTrapped()
             continue;
         for (i = 0; i < TrapBots.Length && TrapBots[i] != B; i++);
         t = B.GetTeamNum();
-        if (t < 0 || t > 1 || bOK[t] == 0 || !Trapped(B))
+        // fix 69: a bot waiting for its spawn hop is not trapped (SU-TokRa: with a player by the valley's
+        // exit, Goa'uld bots waiting there killed themselves at 20 s, 6 times in 7 minutes)
+        if (t < 0 || t > 1 || bOK[t] == 0 || !Trapped(B) || HopPending(B.Pawn))
         {
             if (i < TrapBots.Length)
             {
@@ -1639,6 +1655,8 @@ function bool HumanSees(vector L)
 {
     local Controller C;
 
+    if (bTestHuman)
+        return true;
     for (C = Level.ControllerList; C != None; C = C.NextController)
         if (PlayerController(C) != None && C.Pawn != None && VSize(C.Pawn.Location - L) < 5000
             && FastTrace(L, C.Pawn.Location + vect(0,0,1) * C.Pawn.BaseEyeHeight))
@@ -3350,6 +3368,7 @@ function BalanceSkills()
     local Bot B;
     local float Want;
     local TeamInfo W;
+    local bool bWere;
 
     if (!bScoreRead)
     {
@@ -3358,6 +3377,14 @@ function BalanceSkills()
         if (bLogFixes)
             Log("balance: " $ MapName() $ " score " $ MapScore $ " (" $ ScoreSource $ "), bot skill Goa'uld " $ TeamSkill(0) $ ", Tau'ri " $ TeamSkill(1), 'SUBotFix');
     }
+    // fix 69: the gap learned between bots (SU-Antartica at 5: Goa'uld bots at skill 0.5, Tau'ri at 5.5) is held
+    // to HumanMaxBias each way while a human plays, so nobody gets useless teammates or harmless enemies
+    bWere = bHumansIn;
+    bHumansIn = HumanPlaying();
+    if (bHumansIn && !bWere && bLogFixes)
+        Log("balance: " $ MapName() $ ", a human plays: bot skill Goa'uld " $ TeamSkill(0) $ ", Tau'ri " $ TeamSkill(1), 'SUBotFix');
+    if (!bHumansIn && bWere && bLogFixes)
+        Log("balance: " $ MapName() $ ", no human left: bot skill Goa'uld " $ TeamSkill(0) $ ", Tau'ri " $ TeamSkill(1), 'SUBotFix');
     for (C = Level.ControllerList; C != None; C = C.NextController)
     {
         B = Bot(C);
@@ -3397,9 +3424,25 @@ function float TeamSkill(int Team)
     local float Bias;
 
     Bias = MapScore * BalanceStep;
+    if (bHumansIn && HumanMaxBias >= 0 && !(Level.Game.GetPropertyText("bReplicator") ~= "True"))
+        Bias = FClamp(Bias, -HumanMaxBias, HumanMaxBias);
     if (Team == 0)
         Bias = -Bias;
     return FClamp(Level.Game.GameDifficulty + Bias, 0, 7);
+}
+
+// fix 69: a human player in a team (not a spectator, not the web admin)
+function bool HumanPlaying()
+{
+    local Controller C;
+
+    if (bTestHuman)
+        return true;
+    for (C = Level.ControllerList; C != None; C = C.NextController)
+        if (PlayerController(C) != None && MessagingSpectator(C) == None && C.PlayerReplicationInfo != None
+            && !C.PlayerReplicationInfo.bOnlySpectator && !C.PlayerReplicationInfo.bBot)
+            return true;
+    return false;
 }
 
 function string MapName()
@@ -5355,6 +5398,51 @@ function FixExit(Pawn P, int j)
         $ " nodes around it works either");
 }
 
+// Fix 69: P could not be put at its hop target (someone stands there). Put it on one of the 6 nodes nearest to
+// the target within 1500 uu instead, nodes no human sees first.
+function bool PutNearExit(Pawn P, NavigationPoint Exit)
+{
+    local NavigationPoint N;
+    local array<NavigationPoint> Cand;
+    local array<float> Dist;
+    local float D;
+    local int i, k, Pass;
+
+    for (N = Level.NavigationPointList; N != None; N = N.NextNavigationPoint)
+    {
+        D = VSize(N.Location - Exit.Location);
+        if (N == Exit || D > 1500 || N.PathList.Length == 0 || N.IsA('SUBotRingPad') || N.IsA('Teleporter')
+            || N.IsA('GameObjective') || Abs(N.Location.Z - Exit.Location.Z) > 400)
+            continue;
+        for (i = 0; i < Cand.Length && Dist[i] <= D; i++);
+        if (i >= 6)
+            continue;
+        Cand.Insert(i, 1);
+        Dist.Insert(i, 1);
+        Cand[i] = N;
+        Dist[i] = D;
+        if (Cand.Length > 6)
+        {
+            Cand.Length = 6;
+            Dist.Length = 6;
+        }
+    }
+    for (Pass = 0; Pass < 2; Pass++)
+        for (k = 0; k < Cand.Length; k++)
+        {
+            if (Pass == 0 && HumanSees(Cand[k].Location))
+                continue;
+            if (PutPawn(P, Cand[k].Location + vect(0,0,1) * (P.CollisionHeight - Cand[k].CollisionHeight + 4)))
+            {
+                NumExitAlternates++;
+                if (bLogFixes)
+                    Log(P.GetHumanReadableName() $ " hops next to " $ Exit.Name $ ", to " $ Cand[k].Name $ " (" $ int(Dist[k]) $ " uu away): someone stands on it", 'SUBotFix');
+                return true;
+            }
+        }
+    return false;
+}
+
 function HandleStrandedBots()
 {
     local Controller C;
@@ -5414,12 +5502,16 @@ function HandleStrandedBots()
                 Escapes.Remove(j, 1);
                 continue;
             }
-            // no free place there now (the others hopped there stand on it): try again next second,
-            // for up to 15 s
-            if (!PutPawn(P, Escapes[j].Exit.Location + vect(0,0,15)) && !PutPawn(P, Escapes[j].Exit.Location + vect(0,0,45)))
+            // no free place there now (the others hopped there stand on it): try again next second.
+            // Fix 69: after 5 s, a node around the exit will do (SU-TokRa: a player standing by the valley's
+            // exit blocked every hop, the escape was dropped after 15 s and the Goa'uld bots stayed in their
+            // valley); the hop is given up only after 45 s.
+            if (!PutPawn(P, Escapes[j].Exit.Location + vect(0,0,15)) && !PutPawn(P, Escapes[j].Exit.Location + vect(0,0,45))
+                && (Level.TimeSeconds - Escapes[j].Time < 5 || !PutNearExit(P, Escapes[j].Exit)))
             {
-                if (Level.TimeSeconds - Escapes[j].Time < 15)
+                if (Level.TimeSeconds - Escapes[j].Time < 45)
                     continue;
+                Note(P.GetHumanReadableName() $ " could not hop from its stranded spawn to " $ Escapes[j].Exit.Name $ " in 45 s");
                 Escapes.Remove(j, 1);
                 continue;
             }
@@ -6613,6 +6705,7 @@ defaultproperties
     PilotAttackDist=2500
     PilotAttackRadius=1500
     bAutoBalance=true
+    HumanMaxBias=1.0
     bBalanceLearn=true
     BalanceStep=0.5
     MaxBalanceScore=6
