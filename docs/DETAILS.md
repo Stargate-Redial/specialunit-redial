@@ -9,7 +9,7 @@
 | UT2004 | Steam (registry `HKCU\Software\Valve\Steam`, then every library in `steamapps\libraryfolders.vdf`), then the registry of the retail game | `Steam\steamapps\common\Unreal Tournament 2004` |
 | `SpecialUnit.zip` | the release folder, `Downloads` (and the Downloads folder Windows knows), `Desktop` | |
 
-`-UT2004Dir` and `-ZipPath` override them. If the UT2004 folder isn't writable (`C:\Program Files`), the installer starts again as administrator.
+`-UT2004Dir` and `-ZipPath` override them. If UT2004 is found nowhere (an install from the OldUnreal full-game installer can be in any folder), a window asks for its folder. If the UT2004 folder isn't writable (`C:\Program Files`), the installer starts again as administrator.
 
 ## 1. The OldUnreal 3374 patch
 

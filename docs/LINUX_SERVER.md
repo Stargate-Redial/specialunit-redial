@@ -8,7 +8,7 @@ The game and the mod are not in this repository: you bring them yourself, as bel
 
 UT2004 has no Linux depot on Steam, but its content is the same on every platform, and the Linux binaries come from the patch:
 
-1. the game content, for instance with SteamCMD from an account that owns it: `steamcmd +@sSteamCmdForcePlatformType windows +login <you> +app_update 13230 +quit`, or copied from a Windows install;
+1. the game content: the [OldUnreal full-game installer](https://github.com/OldUnreal/FullGameInstallers/releases) (free, for Linux too; it installs the game already patched), or SteamCMD from an account that owns it (`steamcmd +@sSteamCmdForcePlatformType windows +login <you> +app_update 13230 +quit`), or a copy of a Windows install;
 2. rename `maps` to `Maps` (Steam ships it in lower case, and Linux file names are case-sensitive);
 3. extract the Linux release of the [OldUnreal patch](https://github.com/OldUnreal/UT2004Patches/releases) over it. It needs glibc 2.34 or newer (Debian 12+, Ubuntu 22.04+). The server binary is `System/ucc-bin-amd64`.
 

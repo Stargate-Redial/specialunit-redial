@@ -29,7 +29,7 @@ An unofficial add-on for **Special Unit** (2013), the Stargate SG-1 total conver
 
 ### Quick start
 
-1. Install **Unreal Tournament 2004** (Steam or retail).
+1. Get **Unreal Tournament 2004**. It is no longer sold on Steam, but [OldUnreal](https://www.oldunreal.com/downloads/ut2004/full-game-installers/), who maintain the game's community patches, offer a free installer for the full game: download **`UT2004.exe`** (Windows 7 or later) and run it. It installs the game in the folder you choose, already patched. A Steam or retail copy works too.
 2. Download **`specialunit-redial-v1.0.0.zip`** from [Releases](../../releases), extract it anywhere and double-click **`install.bat`**.
 3. The installer finds UT2004, offers the OldUnreal 3374 patch if it's missing, then opens the [ModDB page](https://www.moddb.com/mods/special-unit/downloads) of Special Unit: download **`SpecialUnit.zip`** (250 MB). The installer picks it up in your Downloads folder by itself.
 4. Launch **Stargate - Special Unit** from the Desktop. Then either:
@@ -86,7 +86,7 @@ Rounds between bots only, at skill 3 and with the maps' own round time:
 ### If something goes wrong
 
 - **The server list is empty:** the OldUnreal 3374 patch is missing. Run `install.bat` again and accept it.
-- **The installer can't find UT2004 or the zip:** pass `-UT2004Dir` or `-ZipPath` (see above).
+- **The installer can't find UT2004 or the zip:** pick the UT2004 folder in the window it opens (the one holding `System\UT2004.exe`), or pass `-UT2004Dir` or `-ZipPath` (see above).
 - **"Version mismatch" when joining a server:** your `SpecialUnit\System\SpecialUnit.u` isn't the ModDB release. Reinstall the mod.
 
 ---
@@ -105,7 +105,7 @@ Un ajout non officiel pour **Special Unit** (2013), la conversion totale Stargat
 
 ### Démarrage rapide
 
-1. Installez **Unreal Tournament 2004** (Steam ou version boîte).
+1. Procurez-vous **Unreal Tournament 2004**. Il n'est plus vendu sur Steam, mais [OldUnreal](https://www.oldunreal.com/downloads/ut2004/full-game-installers/), qui maintient les patchs communautaires du jeu, propose un installeur gratuit du jeu complet : téléchargez **`UT2004.exe`** (Windows 7 ou plus récent) et lancez-le. Il installe le jeu dans le dossier de votre choix, déjà patché. Une copie Steam ou en boîte fonctionne aussi.
 2. Téléchargez **`specialunit-redial-v1.0.0.zip`** dans les [Releases](../../releases), extrayez-le n'importe où, puis double-cliquez sur **`install.bat`**.
 3. L'installeur trouve UT2004, propose le patch OldUnreal 3374 s'il manque, puis ouvre la [page ModDB](https://www.moddb.com/mods/special-unit/downloads) de Special Unit : téléchargez **`SpecialUnit.zip`** (250 Mo). L'installeur le trouve tout seul dans votre dossier Téléchargements.
 4. Lancez **Stargate - Special Unit** depuis le Bureau. Ensuite :
@@ -162,7 +162,7 @@ Manches entre bots uniquement, au niveau 3 et avec la durée de manche prévue p
 ### En cas de problème
 
 - **La liste des serveurs est vide :** il manque le patch OldUnreal 3374. Relancez `install.bat` et acceptez-le.
-- **L'installeur ne trouve pas UT2004 ou le zip :** passez `-UT2004Dir` ou `-ZipPath` (voir plus haut).
+- **L'installeur ne trouve pas UT2004 ou le zip :** choisissez le dossier d'UT2004 dans la fenêtre qu'il ouvre (celui qui contient `System\UT2004.exe`), ou passez `-UT2004Dir` ou `-ZipPath` (voir plus haut).
 - **« Version mismatch » en rejoignant un serveur :** votre `SpecialUnit\System\SpecialUnit.u` n'est pas celui de ModDB. Réinstallez le mod.
 
 ---
