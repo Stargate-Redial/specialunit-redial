@@ -17,7 +17,7 @@ UT2004 has no Linux depot on Steam, but its content is the same on every platfor
 Download the mod's official **`SpecialUnit.zip`** from its [ModDB page](https://www.moddb.com/mods/special-unit/downloads) (SHA-256 `a82b3202…6293`; ModDB doesn't let scripts download it, so copy it to the server yourself), and extract the release zip, then:
 
 ```bash
-bash linux/install-server.sh /home/steam/ut2004 ~/SpecialUnit.zip ~/specialunit-redial-v1.0.1
+bash linux/install-server.sh /home/steam/ut2004 ~/SpecialUnit.zip ~/specialunit-redial-v1.0.2
 ```
 
 It checks the zip, extracts the mod into `<UT2004>/SpecialUnit`, copies `SUBotFix` and `SUTweaks`, lets the engine build `SpecialUnit/System/SpecialUnit.ini` (from `System/UT2004.ini` and the mod's `default.ini`), then applies `linux/server-settings.ini` to it with `linux/su-ini.py`:
@@ -52,5 +52,6 @@ In `[SUBotFix.MutSUBotFix]` of `SpecialUnit.ini` (the defaults are those of the 
 | `bBalanceLearn` | `True` | the map's score moves after each round (saved in `SUBotFixBalance.ini`) |
 | `BalanceScores` | built in | starting scores, e.g. `BalanceScores=SU-Chulak=-1` (negative: the Tau'ri have been winning) |
 | `HumanMaxBias` | `1.0` | while a human plays (not in co-op), the skill gap between the sides stays within this many levels each way |
+| `HopTransitSpeed` | `1000` | while a human plays, a bot whose side only has far spawns (Abydos's Tau'ri) stays dead as long as a drive at this speed (uu/s) to the front takes; `0` turns it off |
 | `bMapRoundTime` | `True` | each round lasts its map's time, not `TimeLimit` |
 | `bLogFixes` | `True` | what the bots' fixes do, in the server log |

@@ -88,7 +88,20 @@ var int NumFactoryHolds;               // fix 65: vehicle spawns held while some
 var() config float HumanMaxBias;       // fix 69: with a human playing, the skill gap of fix 36 is held to this much each way (co-op excepted)
 var bool bHumansIn;                    // fix 69: a human plays (checked by BalanceSkills)
 var int NumExitAlternates;             // fix 69: hops put next to a taken exit
-var() config bool bTestHuman;          // tests only: act as if a human played and saw everything (fixes 54 and 69)
+var() config bool bTestHuman;          // tests only: act as if a human played and saw everything (fixes 54, 69 and 70)
+var() config float HopTransitSpeed;    // fix 70: with a human playing, a bot whose team only has hopped spawns stays dead as
+                                       // long as a drive at this speed (uu/s) from its spawn to the hop target takes (0: off)
+var array<Bot> TransitBots;            // fix 70: dead bots, and when they may respawn
+var array<float> TransitUntil;
+var int NumTransits;
+var float TransitSecs;
+var NavigationPoint TransitFrom, TransitTo;  // the spawn and hop target the last TransitTime measured
+var() config float PullOutTime;        // fix 71: a fighter about to hit something within this many seconds turns away,
+var() config float PullOutDist;        // ... or within this distance, even when it attacks or the obstacle is its target
+var() config float PilotStrikeRange;   // fix 71: a fighter flying at an objective it attacks opens fire this close
+var() config float PilotStrikeTime;    // ... fires at it for this many seconds (0: no attack runs)
+var() config float PilotBreakTime;     // ... then flies off for this many seconds before coming back
+var int NumPullOuts, NumStrikes, NumBreaks;
 var() config bool bKeepSoleLinks;      // fix 56: a stuck link that is a bot's only way is not closed
 var int NumLinkPuts;
 var() config float TrappedTime;        // fix 57: a bot with no walk to its team's objectives respawns after this (0: off)
@@ -268,6 +281,8 @@ struct PilotInfo
     var Bot B;
     var SUBotFlyPoint P;                // move target while steering around an obstacle
     var float AvoidUntil;
+    var float StrikeSince;              // fix 71: since when it has fired at an objective from where it stands
+    var float BreakUntil;               // ... and until when it flies off after that
 };
 var array<PilotInfo> Pilots;
 var int NumAvoid;
@@ -564,6 +579,11 @@ function Timer()
             Log("so far: " $ NumDuels $ " times an attacking capital ship turned on an enemy one", 'SUBotFix');
         if ((Ticks % 60) == 45 && bLogFixes && NumCloseIns > 0)
             Log("so far: " $ NumCloseIns $ " times a pilot shooting an objective from afar was sent closer", 'SUBotFix');
+        if ((Ticks % 60) == 7 && bLogFixes && NumPullOuts + NumStrikes > 0)
+            Log("so far: fighters pulled out " $ NumPullOuts $ " times just before hitting their target or the ground, opened fire on an objective "
+                $ NumStrikes $ " times instead of flying into it, broke off " $ NumBreaks $ " attack runs", 'SUBotFix');
+        if ((Ticks % 60) == 12 && bLogFixes && NumTransits > 0)
+            Log("so far: " $ NumTransits $ " bots took the drive time from their hopped spawn (" $ int(TransitSecs / NumTransits) $ " s on average)", 'SUBotFix');
         if ((Ticks % 60) == 30 && bLogFixes && (NumStaffsGiven > 0 || NumCampRedecides > 0))
             Log("so far: " $ NumStaffsGiven $ " staffs given to Zat-only Goa'uld bots, " $ NumZatSwitches
                 $ " forced switches Zat -> staff, " $ NumCampRedecides $ " re-decisions of bots camping far from their objective",
@@ -3445,6 +3465,89 @@ function bool HumanPlaying()
     return false;
 }
 
+// Fix 70: bots that seemed to teleport to the objective (a player's feedback, 2026-11-12). Every Tau'ri spawn of
+// SU-Abydos is hopped (fixes 3 and 28: 60 k uu straight, 82-85 k uu of walk, to 11 k uu before the front), so a Tau'ri
+// bot was back at the front a second after dying, while a player drives a Hummer for a minute (bots drive one at
+// 400-1000 uu/s). While a human plays, a bot whose team only has hopped spawns stays dead as long as that drive
+// takes at HopTransitSpeed, from the nearest of its team's spawns; then it respawns and hops as before. Not in
+// co-op, and not for a team with a spawn that is walkable or left through rings (players use the rings too).
+function HoldTransits()
+{
+    local Controller C;
+    local Bot B;
+    local int i;
+    local float T;
+
+    for (i = TransitBots.Length - 1; i >= 0; i--)
+        if (TransitBots[i] == None || TransitBots[i].bDeleteMe || TransitBots[i].Pawn != None
+            || !TransitBots[i].IsInState('Dead'))
+        {
+            TransitBots.Remove(i, 1);
+            TransitUntil.Remove(i, 1);
+        }
+    for (C = Level.ControllerList; C != None; C = C.NextController)
+    {
+        B = Bot(C);
+        if (B == None || B.Pawn != None || B.PlayerReplicationInfo == None || !B.IsInState('Dead'))
+            continue;
+        for (i = 0; i < TransitBots.Length && TransitBots[i] != B; i++);
+        if (i == TransitBots.Length)
+        {
+            T = 0;
+            if (Level.Game.IsInState('MatchInProgress') && !Level.Game.bGameEnded && HumanPlaying()
+                && !(Level.Game.GetPropertyText("bReplicator") ~= "True"))
+                T = TransitTime(B.GetTeamNum());
+            TransitBots[i] = B;
+            TransitUntil[i] = Level.TimeSeconds + T;
+            if (T >= 1)
+            {
+                NumTransits++;
+                TransitSecs += T;
+                if (bLogFixes)
+                    Log("transit: " $ B.PlayerReplicationInfo.PlayerName $ " (team " $ B.GetTeamNum() $ ") respawns in " $ int(T)
+                        $ " s, the drive from " $ TransitFrom.Name $ " to " $ TransitTo.Name, 'SUBotFix');
+            }
+        }
+        // the Dead state restarts the bot 0.45-2 s after Begin: keep sending it back there
+        if (Level.TimeSeconds < TransitUntil[i])
+            B.GotoState('Dead', 'Begin');
+    }
+}
+
+// fix 70: seconds of the drive from the team's nearest enabled spawn to its hop target, at HopTransitSpeed;
+// 0 when one of the team's enabled spawns is not hopped, and on space maps (SU-Antartica: every start is "stranded",
+// but bots spawn in their craft and are never hopped; the first version held them 67-70 s)
+function float TransitTime(int Team)
+{
+    local NavigationPoint N;
+    local PlayerStart S;
+    local float D, Best;
+    local int i;
+
+    if (Level.Game.GetPropertyText("bSpaceCrafts") ~= "True")
+        return 0;
+    Best = -1;
+    for (N = Level.NavigationPointList; N != None; N = N.NextNavigationPoint)
+    {
+        S = PlayerStart(N);
+        if (S == None || !S.bEnabled || S.TeamNumber != Team)
+            continue;
+        for (i = 0; i < StrandedStarts.Length && StrandedStarts[i] != S; i++);
+        if (i == StrandedStarts.Length || StrandedExit[i] == None)
+            return 0;
+        D = VSize(StrandedExit[i].Location - S.Location);
+        if (Best < 0 || D < Best)
+        {
+            Best = D;
+            TransitFrom = S;
+            TransitTo = StrandedExit[i];
+        }
+    }
+    if (Best < 0)
+        return 0;
+    return Best / HopTransitSpeed;
+}
+
 function string MapName()
 {
     local string S;
@@ -4082,7 +4185,7 @@ function SpacePilots()
         else if (B.IsInState('RangedAttack') || (B.Enemy != None && B.EnemyVisible()))
             continue;
         i = PilotIndex(B);
-        if (i >= 0 && Level.TimeSeconds < Pilots[i].AvoidUntil)
+        if (i >= 0 && (Level.TimeSeconds < Pilots[i].AvoidUntil || Level.TimeSeconds < Pilots[i].BreakUntil))
             continue;
         // Capital ships (Ha'tak, Daedalus, X-303: Karma choppers, which the PHYS_Flying test above
         // used to skip) sat in RestFormation, so their turret gunners never had an enemy in range
@@ -4149,6 +4252,8 @@ function SpacePilots()
                     Pilots[i].B = B;
                     Pilots[i].P = Spawn(class'SUBotFlyPoint',,, AP);
                 }
+                if (Pilots[i].P == None)
+                    Pilots[i].P = Spawn(class'SUBotFlyPoint',,, AP);
                 if (Pilots[i].P != None)
                 {
                     Pilots[i].P.SetLocation(AP);
@@ -4239,18 +4344,77 @@ function TurretClearShots()
     }
 }
 
+// Fix 71: fighters flew into what they attacked ("kamikaze", a player's feedback, 2026-11-12). Fix 40 and SpacePilots
+// send a fighter to an objective as its move target, and nothing ended that move before it got there: on SU-Antartica
+// (bTestHuman, 655 s) 10 of 37 deaths were Goa'uld gliders flying into the Teltac or the ice around it ("closes in on"
+// or "flies to SUDestroyableObjective1", killer self/world), and about 6 more rammed the Daedalus and the X-303. A
+// fighter flying at an objective it attacks now opens fire once within PilotStrikeRange and in sight.
 function CloseInOnObjectives()
 {
     local Controller C;
     local Bot B;
     local GameObjective O;
+    local float D;
+    local int i;
 
     for (C = Level.ControllerList; C != None; C = C.NextController)
     {
         B = Bot(C);
         if (B == None || B.Pawn == None || Vehicle(B.Pawn) == None || B.Pawn.Physics != PHYS_Flying
-            || B.Pawn.IsA('ONSChopperCraft') || !B.IsInState('RangedAttack')
+            || B.Pawn.IsA('ONSChopperCraft')
             || (B.Squad != None && PlayerController(B.Squad.SquadLeader) != None))
+            continue;
+        i = PilotIndex(B);
+        // Fix 71: attack runs. A fighter in RangedAttack stops (SU-Antartica gliders: about 200 uu/s, their least
+        // speed) and fires as a turret, and a glider fires 200 damage every 0.85 s: once they no longer flew into the
+        // Teltac (12000 health), gliders did 6900-11600 of its health from 6000 uu (400-3100 before) and the Goa'uld
+        // won 8 games of 8. A fighter within PilotStrikeRange (+1000) of the objective it attacks for PilotStrikeTime
+        // seconds, whatever the stock AI does meanwhile, flies off 6000 uu and stays away PilotBreakTime seconds
+        // without firing, then comes back, as players do. (A first version timed only unbroken RangedAttack, which the
+        // stock AI leaves and enters again all the time: 9-18 break-offs a game, no change.)
+        if (i >= 0 && Level.TimeSeconds < Pilots[i].BreakUntil)
+        {
+            B.StopFiring();
+            if (Pilots[i].P != None && B.MoveTarget != Pilots[i].P)
+            {
+                B.RouteGoal = Pilots[i].P;
+                B.MoveTarget = Pilots[i].P;
+                B.GotoState('Roaming', 'Begin');
+            }
+            continue;
+        }
+        O = StrikeObjective(B);
+        if (O != None && PilotStrikeTime > 0 && VSize(O.Location - B.Pawn.Location) < PilotStrikeRange + O.CollisionRadius + 1000)
+        {
+            if (i < 0)
+            {
+                i = Pilots.Length;
+                Pilots.Length = i + 1;
+                Pilots[i].B = B;
+            }
+            if (Pilots[i].StrikeSince == 0)
+                Pilots[i].StrikeSince = Level.TimeSeconds;
+            else if (Level.TimeSeconds - Pilots[i].StrikeSince >= PilotStrikeTime && BreakOff(B, i, O))
+                continue;
+        }
+        else if (i >= 0)
+            Pilots[i].StrikeSince = 0;
+        if (B.IsInState('Roaming') && PilotStrikeRange > 0)
+        {
+            O = GameObjective(B.MoveTarget);
+            if (O == None || O.bDisabled || !O.bProjTarget || O.DefenderTeamIndex == B.GetTeamNum())
+                continue;
+            D = VSize(O.Location - B.Pawn.Location);
+            if (D < PilotStrikeRange + O.CollisionRadius && B.LineOfSightTo(O))
+            {
+                B.GoalString = "SUBotFix: pilot opens fire on " $ O.Name $ " from " $ int(D) $ " uu";
+                B.Focus = O;
+                B.DoRangedAttackOn(O);
+                NumStrikes++;
+            }
+            continue;
+        }
+        if (!B.IsInState('RangedAttack'))
             continue;
         O = GameObjective(B.Target);
         if (O == None || O.bDisabled || VSize(O.Location - B.Pawn.Location) < PilotObjectiveRange + O.CollisionRadius)
@@ -4263,6 +4427,64 @@ function CloseInOnObjectives()
     }
 }
 
+// fix 71: the destroyable objective a fighter attacks: its target, its move target, or its squad's objective
+function GameObjective StrikeObjective(Bot B)
+{
+    local GameObjective O;
+
+    O = GameObjective(B.Target);
+    if (O == None)
+        O = GameObjective(B.MoveTarget);
+    if (O == None && B.Squad != None)
+        O = B.Squad.SquadObjective;
+    if (O == None || O.bDisabled || !O.bActive || !O.bProjTarget || O.DefenderTeamIndex == B.GetTeamNum())
+        return None;
+    return O;
+}
+
+// fix 71: fly to a clear point 6000 uu away, to the side of the line to O and away from it, for PilotBreakTime seconds
+function bool BreakOff(Bot B, int i, GameObjective O)
+{
+    local vector Away, Side, Cand, Try;
+    local int k;
+
+    Pilots[i].StrikeSince = 0;
+    Away = Normal(B.Pawn.Location - O.Location);
+    Side = Normal(Away Cross vect(0,0,1));
+    if (FRand() < 0.5)
+        Side = -Side;
+    for (k = 0; k < 4; k++)
+    {
+        switch (k)
+        {
+            case 0: Cand = Normal(Away + Side + vect(0,0,0.4)); break;
+            case 1: Cand = Normal(Away - Side + vect(0,0,0.4)); break;
+            case 2: Cand = Normal(Away + vect(0,0,0.6)); break;
+            case 3: Cand = Normal(Side + vect(0,0,0.6)); break;
+        }
+        if (FastTrace(B.Pawn.Location + Cand * 6000, B.Pawn.Location))
+        {
+            Try = B.Pawn.Location + Cand * 6000;
+            break;
+        }
+    }
+    if (k == 4)
+        return false;
+    if (Pilots[i].P == None)
+        Pilots[i].P = Spawn(class'SUBotFlyPoint',,, Try);
+    if (Pilots[i].P == None)
+        return false;
+    Pilots[i].P.SetLocation(Try);
+    Pilots[i].BreakUntil = Level.TimeSeconds + PilotBreakTime;
+    NumBreaks++;
+    B.GoalString = "SUBotFix: pilot breaks off from " $ O.Name;
+    B.StopFiring();
+    B.RouteGoal = Pilots[i].P;
+    B.MoveTarget = Pilots[i].P;
+    B.GotoState('Roaming', 'Begin');
+    return true;
+}
+
 function AvoidObstacles()
 {
     local Controller C;
@@ -4271,7 +4493,8 @@ function AvoidObstacles()
     local float BestDot;
     local float Speed;
     local int i, k;
-    local bool bClear;
+    local bool bClear, bImminent, bOnTarget;
+    local Actor H;
 
     for (C = Level.ControllerList; C != None; C = C.NextController)
     {
@@ -4283,12 +4506,19 @@ function AvoidObstacles()
             continue;
         Dir = B.Pawn.Velocity / Speed;
         Ahead = B.Pawn.Location + Dir * FMax(1500, Speed * 1.5);
-        if (Trace(HL, HN, Ahead, B.Pawn.Location + Dir * B.Pawn.CollisionRadius, false) == None)
+        // fix 71: ships too, not only the level (traced from the fighter, which the trace skips); fighters
+        // fly through soldiers (SUFighters.Bump ignores them)
+        H = B.Pawn.Trace(HL, HN, Ahead, B.Pawn.Location, true);
+        if (H == None || (Pawn(H) != None && Vehicle(H) == None))
             continue;
         // the obstacle is the target's own asteroid, or behind the target (SU-Asteroid: pilots
-        // dodged the rock that carries the extractor they attacked and drifted 40 k uu away)
-        if (B.IsInState('RangedAttack') || (B.RouteGoal != None && B.RouteGoal != B.Pawn
-            && VSize(B.RouteGoal.Location - B.Pawn.Location) < VSize(HL - B.Pawn.Location) + 600))
+        // dodged the rock that carries the extractor they attacked and drifted 40 k uu away).
+        // Fix 71: unless the fighter is about to hit it: that rule let gliders dive into the Teltac
+        // and the ice around it, and ram the ships they chased.
+        bOnTarget = B.IsInState('RangedAttack') || (B.RouteGoal != None && B.RouteGoal != B.Pawn
+            && VSize(B.RouteGoal.Location - B.Pawn.Location) < VSize(HL - B.Pawn.Location) + 600);
+        bImminent = PullOutTime > 0 && VSize(HL - B.Pawn.Location) < FMax(PullOutDist, Speed * PullOutTime);
+        if (bOnTarget && !bImminent)
             continue;
         i = PilotIndex(B);
         if (i >= 0 && Level.TimeSeconds < Pilots[i].AvoidUntil)
@@ -4327,12 +4557,19 @@ function AvoidObstacles()
             Pilots[i].B = B;
             Pilots[i].P = Spawn(class'SUBotFlyPoint',,, Try);
         }
+        if (Pilots[i].P == None)        // an entry made by an attack run (fix 71) has no fly point yet
+            Pilots[i].P = Spawn(class'SUBotFlyPoint',,, Try);
         if (Pilots[i].P == None)
             continue;
         Pilots[i].P.SetLocation(Try);
         Pilots[i].AvoidUntil = Level.TimeSeconds + 1.5;
         NumAvoid++;
         B.GoalString = "SUBotFix: pilot avoids " $ int(VSize(HL - B.Pawn.Location)) $ " uu obstacle";
+        if (bOnTarget)
+        {
+            NumPullOuts++;
+            B.GoalString = "SUBotFix: pilot pulls out " $ int(VSize(HL - B.Pawn.Location)) $ " uu before " $ H.Name;
+        }
         B.MoveTarget = Pilots[i].P;
         B.GotoState('Roaming', 'Begin');
     }
@@ -5225,6 +5462,8 @@ function Tick(float DeltaTime)
 
     if (Level.Game.IsInState('MatchInProgress'))
         CaptureCrystals();
+    if (HopTransitSpeed > 0)
+        HoldTransits();
     if (TimedWhat != "" && TimedWall >= 0)
     {
         if (bLogFixes)
@@ -6706,6 +6945,12 @@ defaultproperties
     PilotAttackRadius=1500
     bAutoBalance=true
     HumanMaxBias=1.0
+    HopTransitSpeed=1000
+    PullOutTime=1.2
+    PullOutDist=1500
+    PilotStrikeRange=6000
+    PilotStrikeTime=2
+    PilotBreakTime=8
     bBalanceLearn=true
     BalanceStep=0.5
     MaxBalanceScore=6
