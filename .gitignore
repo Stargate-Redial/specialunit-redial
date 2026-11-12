@@ -1,0 +1,12 @@
+# Special Unit itself is (c) the SU Team and may not be re-released: never commit the mod or its files
+SpecialUnit.zip
+/SpecialUnit/
+
+# Built packages go into the GitHub Release zip, not git
+*.u
+*.ucl
+*.zip
+
+# Build and test output
+build-*/
+*.log

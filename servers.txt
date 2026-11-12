@@ -1,0 +1,3 @@
+# Special Unit servers that install.ps1 adds to the game's Favorites.
+# Format: ip:game_port  Displayed name   (the query port is game_port + 1)
+92.222.243.147:7810  Special Unit: Redial - bots 24/7

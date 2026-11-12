@@ -1,0 +1,30 @@
+Special Unit: Redial -- third-party components and credits
+==========================================================
+
+1. Special Unit
+   ------------
+   Special Unit is a free Stargate SG-1 total conversion for Unreal Tournament 2004,
+   (c) the SU Team (2013, https://www.moddb.com/mods/special-unit). Its readme
+   forbids re-releasing it without the team's permission: nothing of the mod is in
+   this project, neither its packages, maps and textures nor script exported from
+   them. The installer makes you download the official SpecialUnit.zip from ModDB
+   and checks its SHA-256. SUBotFix and SUTweaks are separate packages that load the
+   mod's classes at run time and never change its files.
+
+   The screenshots in docs/images come from the mod's ModDB page. Artwork (c) the
+   SU Team.
+
+2. Unreal Tournament 2004 and the OldUnreal patch
+   ----------------------------------------------
+   SUBotFix and SUTweaks are built with the UT2004 compiler (ucc make) against the
+   game's own packages, which are not included. The installer offers the OldUnreal
+   community patch (https://github.com/OldUnreal/UT2004Patches), downloaded from its
+   GitHub releases.
+
+3. Master servers
+   --------------
+   The master server list written by the installer is the one of the OldUnreal
+   3374 patch (333networks, gonespy, errorist, frag-net, noccer, openspy).
+
+Unreal Tournament 2004 is a trademark of Epic Games. Stargate SG-1 is a trademark
+of MGM. This project is not affiliated with Epic Games, MGM or the SU Team.
