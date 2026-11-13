@@ -102,6 +102,8 @@ var() config float PilotStrikeRange;   // fix 71: a fighter flying at an objecti
 var() config float PilotStrikeTime;    // ... fires at it for this many seconds (0: no attack runs)
 var() config float PilotBreakTime;     // ... then flies off for this many seconds before coming back
 var int NumPullOuts, NumStrikes, NumBreaks;
+var() config float GuardFighterRange;  // fix 72: defenders of a destroyable objective shoot the enemy fighters this close to it first (0: off)
+var int NumGuardShots;
 var() config bool bKeepSoleLinks;      // fix 56: a stuck link that is a bot's only way is not closed
 var int NumLinkPuts;
 var() config float TrappedTime;        // fix 57: a bot with no walk to its team's objectives respawns after this (0: off)
@@ -579,6 +581,8 @@ function Timer()
             Log("so far: " $ NumDuels $ " times an attacking capital ship turned on an enemy one", 'SUBotFix');
         if ((Ticks % 60) == 45 && bLogFixes && NumCloseIns > 0)
             Log("so far: " $ NumCloseIns $ " times a pilot shooting an objective from afar was sent closer", 'SUBotFix');
+        if ((Ticks % 60) == 17 && bLogFixes && NumGuardShots > 0)
+            Log("so far: " $ NumGuardShots $ " times a defender turned on an enemy fighter attacking its objective", 'SUBotFix');
         if ((Ticks % 60) == 7 && bLogFixes && NumPullOuts + NumStrikes > 0)
             Log("so far: fighters pulled out " $ NumPullOuts $ " times just before hitting their target or the ground, opened fire on an objective "
                 $ NumStrikes $ " times instead of flying into it, broke off " $ NumBreaks $ " attack runs", 'SUBotFix');
@@ -4288,6 +4292,89 @@ function SpacePilots()
 // turret 441-2501 on the Ha'tak, all wasted). A gunner whose shot would hit its own ship turns to an
 // enemy it can hit, or holds fire. Fix 55 adds the Hummer rear gun: on SU-IceDet two thirds of its hits
 // (169 of 257 in 16 games) landed on a Hummer, at about 2 damage each (friendly fire).
+// Fix 72: defenders let the fighters destroy what they defend. On SU-Antartica, once the Goa'uld gliders stopped
+// crashing (fix 71), they did most of the Teltac's damage and the Goa'uld won 8 games of 8, while the Tau'ri ships,
+// their gunners and their X-302s shot at the Ha'tak (CTRL samples: Daedalus turret 434 on a capital ship against 164
+// on a fighter). Their guns fire homing bolts at the bot's enemy (Weapon_DaedalusGun, Weapon_X303Gun). A bot in a
+// ship, a ship's gun or a fighter, whose squad defends a destroyable objective, now turns on the enemy fighter
+// nearest to it within GuardFighterRange, when it sees it (a gunner: when its own hull is not in the way).
+function GuardFromFighters()
+{
+    local Controller C, E;
+    local Bot B;
+    local GameObjective O;
+    local Vehicle V, Ship, F, Best;
+    local ONSWeaponPawn W;
+    local vector Start, HL, HN;
+    local float D, BestD;
+    local int Team;
+
+    for (C = Level.ControllerList; C != None; C = C.NextController)
+    {
+        B = Bot(C);
+        if (B == None || B.Squad == None || PlayerController(B.Squad.SquadLeader) != None)
+            continue;
+        V = Vehicle(B.Pawn);
+        if (V == None)
+            continue;
+        W = ONSWeaponPawn(V);
+        Ship = V;
+        if (W != None)
+            Ship = W.VehicleBase;
+        if (Ship == None || !(Ship.IsA('ONSChopperCraft') || Ship.Physics == PHYS_Flying))
+            continue;
+        Team = B.GetTeamNum();
+        O = B.Squad.SquadObjective;
+        if (O == None || O.bDisabled || !O.bActive || !O.bProjTarget || O.DefenderTeamIndex != Team)
+            continue;
+        Start = V.Location;
+        if (W != None && W.Gun != None && W.Gun.WeaponFireLocation != vect(0,0,0))
+            Start = W.Gun.WeaponFireLocation;
+        F = Vehicle(B.Enemy);
+        if (F != None && GuardTarget(F, O, Team) && B.LineOfSightTo(F)
+            && (W == None || Trace(HL, HN, F.Location, Start, true) != Ship))
+            continue;
+        Best = None;
+        BestD = GuardFighterRange + O.CollisionRadius;
+        for (E = Level.ControllerList; E != None; E = E.NextController)
+        {
+            F = Vehicle(E.Pawn);
+            if (F == None || !GuardTarget(F, O, Team))
+                continue;
+            D = VSize(F.Location - O.Location);
+            if (D >= BestD || VSize(F.Location - Start) > 15000 || !B.LineOfSightTo(F)
+                || (W != None && Trace(HL, HN, F.Location, Start, true) == Ship))
+                continue;
+            BestD = D;
+            Best = F;
+        }
+        if (Best == None)
+            continue;
+        NumGuardShots++;
+        B.Enemy = Best;
+        B.Target = Best;
+        B.Focus = Best;
+        if (W == None && Ship.Physics == PHYS_Flying)
+        {
+            B.GoalString = "SUBotFix: fighter goes for " $ Best.Name $ " attacking " $ O.Name;
+            B.WhatToDoNext(72);
+        }
+        else if (!B.IsInState('RangedAttack'))
+        {
+            B.GoalString = "SUBotFix: fires at " $ Best.Name $ " attacking " $ O.Name;
+            B.DoRangedAttackOn(Best);
+        }
+    }
+}
+
+// fix 72: an enemy fighter (not a capital ship), alive and flown, within GuardFighterRange of O
+function bool GuardTarget(Vehicle F, GameObjective O, int Team)
+{
+    return F.Health > 0 && F.Controller != None && F.Physics == PHYS_Flying && !F.IsA('ONSChopperCraft')
+        && F.GetTeamNum() != Team && F.GetTeamNum() != 255
+        && VSize(F.Location - O.Location) < GuardFighterRange + O.CollisionRadius;
+}
+
 function TurretClearShots()
 {
     local Controller C;
@@ -5476,6 +5563,8 @@ function Tick(float DeltaTime)
         AvoidObstacles();
         if (PilotObjectiveRange > 0)
             CloseInOnObjectives();
+        if (GuardFighterRange > 0)
+            GuardFromFighters();
         if (bTurretClearShots)
             TurretClearShots();
         if (bFireOnTheMove)
@@ -6949,8 +7038,9 @@ defaultproperties
     PullOutTime=1.2
     PullOutDist=1500
     PilotStrikeRange=6000
-    PilotStrikeTime=2
-    PilotBreakTime=8
+    PilotStrikeTime=1
+    PilotBreakTime=16
+    GuardFighterRange=8000
     bBalanceLearn=true
     BalanceStep=0.5
     MaxBalanceScore=6

@@ -30,7 +30,7 @@ An unofficial add-on for **Special Unit** (2013), the Stargate SG-1 total conver
 ### Quick start
 
 1. Get **Unreal Tournament 2004**. It is no longer sold on Steam, but [OldUnreal](https://www.oldunreal.com/downloads/ut2004/full-game-installers/), who maintain the game's community patches, offer a free installer for the full game: download **`UT2004.exe`** (Windows 7 or later) and run it. It installs the game in the folder you choose, already patched. A Steam or retail copy works too.
-2. Download **`specialunit-redial-v1.0.2.zip`** from [Releases](../../releases), extract it anywhere and double-click **`install.bat`**.
+2. Download **`specialunit-redial-v1.0.3.zip`** from [Releases](../../releases), extract it anywhere and double-click **`install.bat`**.
 3. The installer finds UT2004, offers the OldUnreal 3374 patch if it's missing, then opens the [ModDB page](https://www.moddb.com/mods/special-unit/downloads) of Special Unit: download **`SpecialUnit.zip`** (250 MB). The installer picks it up in your Downloads folder by itself.
 4. Launch **Stargate - Special Unit** from the Desktop. Then either:
    - **Instant Action** on an `SU-` map, with as many bots as you like. In **Mutators**, check that "SU Bot Fix" and "SU Speed" are ticked: the installer ticks them, unless you had already picked mutators in the mod;
@@ -57,7 +57,7 @@ Special Unit came with bots, but they stood at their spawn on most maps. Redial 
 
 - **Navigation:** the maps were built for smaller characters than the mod's soldiers, so bots couldn't use most paths. Paths are resized, broken networks joined, and corridors laid by the bots' own flood fill where a map has no path at all (TokRa's crystal tunnels, IceDet's caves and plank bridge).
 - **Objectives:** bots go for the objectives the mod never pointed them to, use the rings, fetch and carry the crystals, step on the triggers that bring the bridges, and defend what their team holds.
-- **Fights:** bots fire while they move, medics heal with their syringe, soldiers refill at the ammo crates, Goa'uld bots get a staff weapon (the zat can't hurt an objective), gunners stop firing into their own ship, and pilots make attack passes and pull out before they hit their target or the ground.
+- **Fights:** bots fire while they move, medics heal with their syringe, soldiers refill at the ammo crates, Goa'uld bots get a staff weapon (the zat can't hurt an objective), gunners stop firing into their own ship, pilots make attack passes and pull out before they hit their target or the ground, and defenders shoot first at the fighters attacking what they defend.
 - **Balance:** each map keeps a score of its last rounds, and the side that wins more gets weaker bots, round after round. While you play, the gap between the two sides stays within one skill level, so neither your teammates nor your enemies are useless.
 - **Things a player should not see:** a bot is never moved under a player's eyes, and while you play, a bot that respawns far from the fight takes as long to come back as you would (on Abydos, the Hummer drive across the desert).
 
@@ -79,7 +79,7 @@ Rounds between bots only, at skill 3 and with the maps' own round time:
 | SU-Chulak | The Goa'uld computer, then the generator. Balanced, all or nothing: the Tau'ri break in early or the computer holds to the end. |
 | SU-TokRa | Big fights, then the race for 9 crystals in the tunnels. Balanced. |
 | SU-IceDet | All 5 stages, down to the last crystal over the light bridge and the plank bridge. The Tau'ri usually win it, in 10 to 25 of its 30 minutes. |
-| SU-Antartica | Fleet battle: capital ships against each other, fighters in close. The Goa'uld win it more often since 1.0.2: their gliders no longer crash into the Teltac, and the Tau'ri bots don't guard it well yet. |
+| SU-Antartica | Fleet battle: capital ships against each other, gliders making passes at the Teltac, its defenders hunting them. Leans a little to the Goa'uld (8 of 12 games), often decided in the last minute. |
 | SU-Asteroid | Fighter battles, but bots can't hit the extractors: the Goa'uld win at the 10-minute limit without a Tau'ri player. |
 | SU-Asgard[Medium], SU-Asgard[Hard], SU-X303Down | Co-op against the Replicators. Bots fight and get 4 to 6 of Asgard[Medium]'s 7 objectives, then run out of lives: it takes players to win. |
 
@@ -106,7 +106,7 @@ Un ajout non officiel pour **Special Unit** (2013), la conversion totale Stargat
 ### Démarrage rapide
 
 1. Procurez-vous **Unreal Tournament 2004**. Il n'est plus vendu sur Steam, mais [OldUnreal](https://www.oldunreal.com/downloads/ut2004/full-game-installers/), qui maintient les patchs communautaires du jeu, propose un installeur gratuit du jeu complet : téléchargez **`UT2004.exe`** (Windows 7 ou plus récent) et lancez-le. Il installe le jeu dans le dossier de votre choix, déjà patché. Une copie Steam ou en boîte fonctionne aussi.
-2. Téléchargez **`specialunit-redial-v1.0.2.zip`** dans les [Releases](../../releases), extrayez-le n'importe où, puis double-cliquez sur **`install.bat`**.
+2. Téléchargez **`specialunit-redial-v1.0.3.zip`** dans les [Releases](../../releases), extrayez-le n'importe où, puis double-cliquez sur **`install.bat`**.
 3. L'installeur trouve UT2004, propose le patch OldUnreal 3374 s'il manque, puis ouvre la [page ModDB](https://www.moddb.com/mods/special-unit/downloads) de Special Unit : téléchargez **`SpecialUnit.zip`** (250 Mo). L'installeur le trouve tout seul dans votre dossier Téléchargements.
 4. Lancez **Stargate - Special Unit** depuis le Bureau. Ensuite :
    - **Partie instantanée** sur une carte `SU-`, avec autant de bots que vous voulez. Dans **Mutators**, vérifiez que « SU Bot Fix » et « SU Speed » sont cochés : l'installeur les coche, sauf si vous aviez déjà choisi des mutators dans le mod ;
@@ -133,7 +133,7 @@ Special Unit avait des bots, mais ils restaient à leur point d'apparition sur l
 
 - **Navigation :** les cartes ont été construites pour des personnages plus petits que les soldats du mod, et les bots ne pouvaient pas emprunter la plupart des chemins. Les chemins sont redimensionnés, les réseaux coupés sont reliés, et des couloirs sont tracés par remplissage là où une carte n'a aucun chemin (les tunnels à cristaux de TokRa, les grottes et le pont de planches d'IceDet).
 - **Objectifs :** les bots vont vers les objectifs que le mod ne leur indiquait pas, prennent les anneaux, vont chercher et portent les cristaux, marchent sur les déclencheurs qui font venir les ponts, et défendent ce que leur équipe tient.
-- **Combats :** les bots tirent en se déplaçant, les médecins soignent avec leur seringue, les soldats se ravitaillent aux caisses de munitions, les bots goa'uld reçoivent une lance (le zat ne peut pas abîmer un objectif), les artilleurs ne tirent plus dans leur propre vaisseau, et les pilotes font des passes d'attaque et dégagent avant de percuter leur cible ou le sol.
+- **Combats :** les bots tirent en se déplaçant, les médecins soignent avec leur seringue, les soldats se ravitaillent aux caisses de munitions, les bots goa'uld reçoivent une lance (le zat ne peut pas abîmer un objectif), les artilleurs ne tirent plus dans leur propre vaisseau, les pilotes font des passes d'attaque et dégagent avant de percuter leur cible ou le sol, et les défenseurs tirent d'abord sur les chasseurs qui attaquent ce qu'ils défendent.
 - **Équilibre :** chaque carte garde un score de ses dernières manches, et le camp qui gagne le plus reçoit des bots plus faibles, manche après manche. Quand vous jouez, l'écart entre les deux camps reste dans un niveau, pour que ni vos coéquipiers ni vos adversaires ne soient inutiles.
 - **Ce qu'un joueur ne doit pas voir :** un bot n'est jamais déplacé sous les yeux d'un joueur et, quand vous jouez, un bot qui réapparaît loin du combat met autant de temps que vous à revenir (sur Abydos, la traversée du désert en Hummer).
 
@@ -155,7 +155,7 @@ Manches entre bots uniquement, au niveau 3 et avec la durée de manche prévue p
 | SU-Chulak | L'ordinateur goa'uld, puis le générateur. Équilibrée, tout ou rien : les Tau'ri percent tôt, ou l'ordinateur tient jusqu'au bout. |
 | SU-TokRa | De gros combats, puis la course aux 9 cristaux dans les tunnels. Équilibrée. |
 | SU-IceDet | Les 5 étapes, jusqu'au dernier cristal par le pont de lumière et le pont de planches. Les Tau'ri la gagnent le plus souvent, en 10 à 25 de ses 30 minutes. |
-| SU-Antartica | Bataille de flottes : les vaisseaux s'affrontent, les chasseurs viennent au contact. Les Goa'uld la gagnent plus souvent depuis la 1.0.2 : leurs planeurs ne s'écrasent plus sur le Teltac, et les bots tau'ri ne le gardent pas encore bien. |
+| SU-Antartica | Bataille de flottes : les vaisseaux s'affrontent, les planeurs font des passes sur le Teltac et ses défenseurs les traquent. Penche un peu vers les Goa'uld (8 parties sur 12), souvent dans la dernière minute. |
 | SU-Asteroid | Combats de chasseurs, mais les bots ne touchent pas les extracteurs : sans joueur tau'ri, les Goa'uld gagnent à la limite des 10 minutes. |
 | SU-Asgard[Medium], SU-Asgard[Hard], SU-X303Down | Coopération contre les Réplicateurs. Les bots combattent et remplissent 4 à 6 des 7 objectifs d'Asgard[Medium], puis épuisent leurs vies : il faut des joueurs pour gagner. |
 
